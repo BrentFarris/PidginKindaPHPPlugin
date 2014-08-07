@@ -16,21 +16,39 @@ function Send($msg, $user='', $mono=false) {
 		echo $user . ' ' . $msg;
 }
 
-function StartsWith($haystack, $needle) {
-	return strpos($haystack, '/' . $needle . ' ') === 0;
-}
-
+$cmdChar = '\\';
 $sender = $_GET['sender'];
+$file = 'Users/' . $sender;
 $message = $_GET['msg'] . ' ';	// Add space at end of string to check multiple commands
 								// that may start with the same string of characters
 
+if (file_exists($file)) {
+	$last = file_get_contents($file);
+
+	if ($last >= time())
+		exit;
+}
+
+file_put_contents($file, time());
+								
 $cmd = explode(' ', $message);
+if (count($cmd) < 1)
+	return;
+
+$arg = count($cmd) > 1 ? $cmd[1] : '';
 $cmd = $cmd[0];
 
 $methods = array(
-	'/roll' => function($sender) { Send('rolled ' . mt_rand(1, 6), $sender); },
-	'/brent' => function($sender) { Send(file_get_contents('brent.txt'), '', true); }
+	'roll' => function($sender) { Send('rolled ' . mt_rand(1, 6), $sender); },
+	'brent' => function() { Send(file_get_contents('brent.txt'), '', true); },
+	'gmt' => function() { Send(gmdate('M d Y H:i:s', time())); },
+	'epoch' => function() { Send(time()); },
+	'togmt' => function($sender, $arg) { Send(gmdate('M d Y H:i:s', $arg)); }
 );
 
-if (array_key_exists($cmd, $methods))
-	$methods[$cmd]($sender);
+if (strpos($cmd, $cmdChar) === 0) {
+	$cmd = ltrim($cmd, $cmdChar);
+	
+	if (array_key_exists($cmd, $methods))
+		$methods[$cmd]($sender, $arg);
+}
