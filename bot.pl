@@ -10,7 +10,7 @@ use LWP::Simple;
 	version => "1.0",
 	summary => "A plugin that allows the reading and responding of messages$
 	description => "This plugin allows you to write responses and consume t$
-	author => "John H. Kelm <brent\@beardedmangames.com",
+	author => "Brent A. Farris <brent\@beardedmangames.com",
 	url => "https://www.beardedmangames.com",
 	load => "plugin_load",
 	unload => "plugin_unload"
