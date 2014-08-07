@@ -11,4 +11,4 @@ Next, copy the bot.pl file to your pidgin plugin directory (for linux it is ~/.p
 
 Next, you will need to run a local web server that supports PHP (will make this work with non-webserver PHP later).  Just drop the index.php file and brent.txt into a directory named "pidgin" in your web server directory.
 
-Last, just log into pidgin, go to Tools->Plugins and then check on "Brents Plugin"
+Last, just log into pidgin, go to Tools->Plugins and then check on "Brents Plugin 0.1"
