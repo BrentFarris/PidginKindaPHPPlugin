@@ -7,11 +7,11 @@ use LWP::Simple;
 %PLUGIN_INFO = (
 	perl_api_version => 2,
 	name => "Brents Plugin",
-	version => "0.1",
-	summary => "Test plugin for the Perl interpreter.",
-	description => "Your description here",
-	author => "John H. Kelm <johnhkelm\@gmail.com",
-	url => "http://pidgin.im",
+	version => "1.0",
+	summary => "A plugin that allows the reading and responding of messages$
+	description => "This plugin allows you to write responses and consume t$
+	author => "John H. Kelm <brent\@beardedmangames.com",
+	url => "https://www.beardedmangames.com",
 	load => "plugin_load",
 	unload => "plugin_unload"
 );
