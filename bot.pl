@@ -116,5 +116,5 @@ sub plugin_load {
 	#print "Testing Purple::Conversation::IM::write()...\n";
 	#$conv2->get_im_data()->write("SENDER", "<b>Message</b> Test.", 0, 0);
 
-	Purple::Debug::info("BRENTS PLUGIN", "PLUGIN BUILD 0.0002.\n");
+	#Purple::Debug::info("BRENTS PLUGIN", "Debugging stuff.\n");
 }
