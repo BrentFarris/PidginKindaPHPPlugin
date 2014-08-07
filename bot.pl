@@ -7,9 +7,9 @@ use LWP::Simple;
 %PLUGIN_INFO = (
 	perl_api_version => 2,
 	name => "Brents Plugin",
-	version => "1.0",
-	summary => "A plugin that allows the reading and responding of messages$
-	description => "This plugin allows you to write responses and consume t$
+	version => "1.01",
+	summary => "A plugin that allows the reading and responding of messages in PHP via GET",
+	description => "This plugin allows you to write responses and consume text from ims and chats via PHP GET requests.",
 	author => "Brent A. Farris <brent\@beardedmangames.com",
 	url => "https://www.beardedmangames.com",
 	load => "plugin_load",
@@ -31,9 +31,10 @@ sub check {
 	my $hs = HTML::Strip->new();
 	my $message = $hs->parse(shift);
 	my $conv = shift;
+	my $me = shift;
 	my $sender = shift;
-	my $work = get("http://127.0.0.1/pidgin/index.php?sender=" . $sender . $
-
+	my $work = get("http://127.0.0.1/pidgin/index.php?me=".$me."&sender=".$sender."&msg=".$message);
+	
 	if ($work ne "") {
 		$conv->get_im_data()->send($work);
 	}
@@ -54,23 +55,23 @@ sub sent_im_msg {
 	
 	#Purple::Debug::info("BRENTS PLUGIN", $message . "\n");
 
-	check($message, $conv, $account->get_username());
+	check($message, $conv, $account->get_username(), $account->get_username());
 }
 
 sub received_im_msg {
 	my ($account, $sender, $message, $conv, $flags) = @_;
-	check($message, $conv, $sender);
+	check($message, $conv, $account->get_username(), $sender);
 }
 
 sub sent_chat_msg {
 	my ($account, $message, $id) = @_;
 	my $conv = Purple::Conversation::Chat::purple_find_chat($account->get_connection(), $id);
-	check($message, $conv, $account->get_username());
+	check($message, $conv, $account->get_username(), $account->get_username());
 }
 
 sub received_chat_msg {
 	my ($account, $sender, $message, $conv, $flags) = @_;
-	check($message, $conv, $sender);
+	check($message, $conv, $account->get_username(), $sender);
 }
 
 sub plugin_init {
