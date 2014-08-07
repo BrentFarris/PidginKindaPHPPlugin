@@ -30,7 +30,9 @@ if (file_exists($file)) {
 }
 
 file_put_contents($file, time());
-								
+
+define('TIME_FORMAT', 'M d Y h:i:s a');
+
 $cmd = explode(' ', $message);
 if (count($cmd) < 1)
 	return;
@@ -41,9 +43,10 @@ $cmd = $cmd[0];
 $methods = array(
 	'roll' => function($sender) { Send('rolled ' . mt_rand(1, 6), $sender); },
 	'brent' => function() { Send(file_get_contents('brent.txt'), '', true); },
-	'gmt' => function() { Send(gmdate('M d Y H:i:s', time())); },
+	'gmt' => function() { Send(gmdate(TIME_FORMAT, time())); },
 	'epoch' => function() { Send(time()); },
-	'togmt' => function($sender, $arg) { Send(gmdate('M d Y H:i:s', $arg)); }
+	'togmt' => function($sender, $arg) { Send(gmdate(TIME_FORMAT, $arg)); },
+	'totime' => function($sender, $arg) { Send(date(TIME_FORMAT, $arg)); }
 );
 
 if (strpos($cmd, $cmdChar) === 0) {
