@@ -32,19 +32,16 @@ sub check {
 	my $message = $hs->parse(shift);
 	my $conv = shift;
 	my $sender = shift;
+	my $work = get("http://127.0.0.1/pidgin/index.php?sender=" . $sender . $
 
-	if ($message =~ /^(\/)/) {
-		my $work = get("http://127.0.0.1/pidgin/index.php?sender=" . $sender . "&msg=" . $message);
-
-		if ($work ne "") {
-			$conv->get_im_data()->send($work);
-		}
+	if ($work ne "") {
+		$conv->get_im_data()->send($work);
 	}
 
 	#if (starts_with_cmd($message, "roll")) {
 	#	#$conv->get_im_data()->write("SENDER", "Rolling", 0, 0);
 	#	$conv->get_im_data()->send("Rolling");
-        #}
+	#}
 
 	#if (starts_with_cmd($message, "google")) {
 	#	$conv->get_im_data()->send($loc);
