@@ -25,18 +25,20 @@ sub check {
 	my $me = shift;
 	my $sender = shift;
 	my $work = get("http://127.0.0.1/pidgin/index.php?me=".$me."&sender=".$sender."&msg=".$message);
-
-	#Purple::Debug::info("BRENTS PLUGIN", "me ".$me."\n");
-	#Purple::Debug::info("BRENTS PLUGIN", "sender ".$sender."\n");
-	#Purple::Debug::info("BRENTS PLUGIN", "message ".$message."\n");
-	#Purple::Debug::info("BRENTS PLUGIN", "work ".$work."\n");
-
-	if ($work ne "" && $work !~ /^([wW]arning:)/ && $work !~ /^([fF]atal [eE]rror:)/ && $work !~ /^([pP]arse [eE]rror:)/ && $work !~ /^([nN]otice:)/) {
-		if (defined $conv->get_im_data()) {
-			$conv->get_im_data()->send($work);
-		} elsif (defined $conv->get_chat_data()) {
-			$conv->get_chat_data()->send($work);
+	
+	if ($sender eq "[BUX CREW ASSEMBLE]" or $sender eq $me) {
+		if ($work ne "" && $work !~ /^([wW]arning:)/ && $work !~ /^([fF]atal [eE]rror:)/ && $work !~ /^([pP]arse [eE]rror:)/ && $work !~ /^([nN]otice:)/) {
+			if (defined $conv->get_im_data()) {
+				$conv->get_im_data()->send($work);
+			} elsif (defined $conv->get_chat_data()) {
+				$conv->get_chat_data()->send($work);
+			}
 		}
+	} else {
+		Purple::Debug::info("BRENTS PLUGIN", "me ".$me."\n");
+		Purple::Debug::info("BRENTS PLUGIN", "sender ".$sender."\n");
+		Purple::Debug::info("BRENTS PLUGIN", "message ".$message."\n");
+		Purple::Debug::info("BRENTS PLUGIN", "work ".$work."\n");
 	}
 	
 	#Purple::Debug::info("BRENTS PLUGIN", $message . "\n");
