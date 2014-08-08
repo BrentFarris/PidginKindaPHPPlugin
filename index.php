@@ -1,7 +1,17 @@
 <?php
 
+define('PATH', realpath(dirname(__FILE__)) . '/');
+define('SETTINGS', PATH . 'settings.js');
+
+$settings = json_decode(file_get_contents(SETTINGS), true);
+
 function ToMonospace($str) {
 	return '<font face="Courier 10 Pitch" size="1">' . $str . '</font>';
+}
+
+function DONE($file) {
+	file_put_contents(PATH . $file, time());
+	exit;
 }
 
 function Send($msg, $user='', $mono=false) {
@@ -30,14 +40,36 @@ if (strpos($sender, '[') === 0 && strpos($message, '(') === 0) {
 	$message = trim(substr($message, strpos($message, ')') + 1));
 }
 
-define('PATH', realpath(dirname(__FILE__)) . '/');
-
 if (file_exists(PATH . $file)) {
 	$last = file_get_contents(PATH . $file);
 
 	if ($last >= time())
-		exit;
+		DONE($file);
 }
+
+$primary = array($cmdChar.'off ', $cmdChar.'on ');
+
+if (in_array($message, $primary)) {
+	if ($sender == $me) {
+		if ($message == $cmdChar.'off ') {
+			$settings['active'] = false;
+			echo 'Turning off subconscious';
+			file_put_contents(SETTINGS, json_encode($settings));
+			DONE($file);
+		} else if ($message == $cmdChar.'on ') {
+			$settings['active'] = true;
+			echo 'Subconscious turned on';
+			file_put_contents(SETTINGS, json_encode($settings));
+			DONE($file);
+		}
+	} else {
+		echo "Computer says no... D:".
+		DONE($file);
+	}
+}
+
+if (!$settings['active'])
+	DONE($file);
 
 define('TIME_FORMAT', 'M d Y h:i:s a');
 define('GEO_CODE', '56730653');
@@ -81,4 +113,4 @@ if (strpos($cmd, $cmdChar) === 0) {
 	}
 }
 
-file_put_contents(PATH . $file, time());
+DONE($file);
