@@ -21,9 +21,14 @@ $cmdChar = '\\';
 $me = $_GET['me'];
 //$sender = $argv[2];
 $sender = $_GET['sender'];
-$file = 'Users/' . rtrim($sender, '/');
+$file = 'Users/' . str_replace('[', '', str_replace(']', '', str_replace('/', '', $sender)));
 //$message = $argv[3];			// Add space at end of string to check multiple commands
 $message = $_GET['msg'] . ' ';	// that may start with the same string of characters
+
+if (strpos($sender, '[') === 0 && strpos($message, '(') === 0) {
+	$sender = trim(substr($message, 1, strpos($message, ')') - 1));
+	$message = trim(substr($message, strpos($message, ')') + 1));
+}
 
 define('PATH', realpath(dirname(__FILE__)) . '/');
 
@@ -34,11 +39,10 @@ if (file_exists(PATH . $file)) {
 		exit;
 }
 
-file_put_contents(PATH . $file, time());
-
 define('TIME_FORMAT', 'M d Y h:i:s a');
 
 $cmd = explode(' ', $message);
+
 if (count($cmd) < 1)
 	return;
 
@@ -46,8 +50,30 @@ $arg = count($cmd) > 1 ? $cmd[1] : '';
 $cmd = $cmd[0];
 
 $methods = array(
-	'roll' => function($sender) { Send('rolled ' . mt_rand(1, 6), $sender); },
-	'brent' => function() { Send(file_get_contents('brent.txt'), '', true); },
+	'roll' => function($sender, $arg) {
+		$rolls = 'rolled ' . mt_rand(1, 6);
+		if (is_numeric($arg) && $arg > 0 && $arg < 6) {
+			for ($i = 0; $i < $arg - 1; $i++)
+				$rolls .= ', ' . mt_rand(1, 6);
+		}
+		
+		Send($rolls, $sender);
+	},
+	'd20' => function($sender, $arg) {
+		$rolls = 'rolled ' . mt_rand(1, 20);
+		if (is_numeric($arg) && $arg > 0 && $arg < 6) {
+			for ($i = 0; $i < $arg - 1; $i++)
+				$rolls .= ', ' . mt_rand(1, 20);
+		}
+		
+		Send($rolls, $sender);
+	},
+	/*'brent' => function()
+	{
+		$lines = explode("\n", trim(file_get_contents(PATH . 'brent.txt')));
+		shuffle($lines);
+		Send($lines[0], '', true);
+	},*/
 	'gmt' => function() { Send(gmdate(TIME_FORMAT, time())); },
 	'time' => function() { Send(date(TIME_FORMAT, time())); },
 	'epoch' => function() { Send(time()); },
@@ -61,10 +87,17 @@ if (strpos($cmd, $cmdChar) === 0) {
 	if (array_key_exists($cmd, $methods))
 		$methods[$cmd]($sender, $arg);
 	else if ($cmd == 'help')
-		Send('\\' . implode(', \\', array_keys($methods)));
+		Send('Commands: \\' . implode(', \\', array_keys($methods)));
 } else {
+	$lols = array('lol', 'haha', 'hehe');
 	if ($sender != $me) {
-		if (strpos($message, 'lol') !== false || strpos($message, 'haha') !== false)
-			echo 'lolololol';
+		foreach ($lols as $lol) {
+			if (strpos(strtolower($message), $lol) !== false) {
+				echo 'lolololol';
+				break;
+			}
+		}
 	}
 }
+
+file_put_contents(PATH . $file, time());
