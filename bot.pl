@@ -2,6 +2,7 @@ use Purple;
 use Pidgin;
 
 use HTML::Strip;
+use HTML::Entities;
 use LWP::Simple;
 
 %PLUGIN_INFO = (
@@ -18,7 +19,8 @@ use LWP::Simple;
 
 sub check {
 	my $hs = HTML::Strip->new();
-	my $message = $hs->parse(shift);
+	#my $message = $hs->parse(shift);
+	my $message = encode_entities($hs->parse(shift));
 	my $conv = shift;
 	my $me = shift;
 	my $sender = shift;
