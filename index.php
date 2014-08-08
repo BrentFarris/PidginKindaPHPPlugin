@@ -9,8 +9,12 @@ function ToMonospace($str) {
 	return '<font face="Courier 10 Pitch" size="1">' . $str . '</font>';
 }
 
-function DONE($file) {
-	file_put_contents(PATH . $file, time());
+function DONE() {
+	$file = PATH . FILE_LOC;
+	if (!is_dir($file) && !empty($file)) {
+		file_put_contents($file, time());
+	}
+	
 	exit;
 }
 
@@ -20,10 +24,14 @@ function Send($msg, $user='', $mono=false) {
 	else
 		$msg = htmlentities($msg);
 	
+	// TODO:  Change this to do a lookup with assoc table
+	if (strpos($msg, '__DEG__') !== false)
+		$msg = str_replace('__DEG__', '&#176;', $msg);
+	
 	if (empty($user))
-		echo $msg;
+		echo '<b><font color="2D4287">'.$msg.'</font></b>';
 	else
-		echo $user . ' ' . $msg;
+		echo '<b><font color="3A872D">'.$user.':</font> <font color="2D4287">'.$msg.'</font></b>';
 }
 
 $cmdChar = '\\';
@@ -31,7 +39,6 @@ $cmdChar = '\\';
 $me = $_GET['me'];
 //$sender = $argv[2];
 $sender = $_GET['sender'];
-$file = 'Users/' . str_replace('[', '', str_replace(']', '', str_replace('/', '', $sender)));
 //$message = $argv[3];			// Add space at end of string to check multiple commands
 $message = $_GET['msg'] . ' ';	// that may start with the same string of characters
 
@@ -40,11 +47,17 @@ if (strpos($sender, '[') === 0 && strpos($message, '(') === 0) {
 	$message = trim(substr($message, strpos($message, ')') + 1));
 }
 
+$file = '';
+if (!empty($sender))
+	$file = 'Users/' . str_replace('/', '', $sender);
+
+define('FILE_LOC', $file);
+
 if (file_exists(PATH . $file)) {
 	$last = file_get_contents(PATH . $file);
 
 	if ($last >= time())
-		DONE($file);
+		DONE();
 }
 
 $primary = array($cmdChar.'off ', $cmdChar.'on ');
@@ -53,26 +66,26 @@ if (in_array($message, $primary)) {
 	if ($sender == $me) {
 		if ($message == $cmdChar.'off ') {
 			$settings['active'] = false;
-			echo 'Turning off subconscious';
+			Send('Turning off Subconscious');
 			file_put_contents(SETTINGS, json_encode($settings));
-			DONE($file);
+			DONE();
 		} else if ($message == $cmdChar.'on ') {
 			$settings['active'] = true;
-			echo 'Subconscious turned on';
+			Send('Subconscious turned on');
 			file_put_contents(SETTINGS, json_encode($settings));
-			DONE($file);
+			DONE();
 		}
 	} else {
-		echo "Computer says no... D:".
-		DONE($file);
+		Send('Computer says no... D:').
+		DONE();
 	}
 }
 
 if (!$settings['active'])
-	DONE($file);
+	DONE();
 
 define('TIME_FORMAT', 'M d Y h:i:s a');
-define('GEO_CODE', '56730653');
+define('GEO_CODE', '56738275');
 
 $cmd = explode(' ', $message);
 
@@ -89,9 +102,12 @@ $methods = array(
 	'gmt' => function() { Send(gmdate(TIME_FORMAT, time())); },
 	'time' => function() { Send(date(TIME_FORMAT, time())); },
 	'epoch' => function() { Send(time()); },
-	'togmt' => function($sender, $arg) { if (!empty($arg)) Send(gmdate(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\togmt [integer]'); /* 651144633 */ },
-	'totime' => function($sender, $arg) { if (!empty($arg)) Send(date(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\totime [integer]'); /* 651169833 */ },
-	'weather' => function() { $xml = simplexml_load_file('http://weather.yahooapis.com/forecastrss?w=' . GEO_CODE); $current = $xml->channel->item->description; $start = strpos($current, 'Current Conditions:') + strlen('Current Conditions:</b><br />'); $end = strpos($current, '<BR />', $start); echo trim(str_replace(' F', '&#176; F', substr($current, $start, $end - $start))); }
+	'togmt' => function($sender, $arg) { if (!empty($arg) && is_numeric($arg)) Send(gmdate(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\togmt [integer]'); /* 651144633 */ },
+	'totime' => function($sender, $arg) { if (!empty($arg) && is_numeric($arg)) Send(date(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\totime [integer]'); /* 651169833 */ },
+	'weather' => function() { $xml = simplexml_load_file('http://weather.yahooapis.com/forecastrss?w=' . GEO_CODE); $current = $xml->channel->item->description; $start = strpos($current, 'Current Conditions:') + strlen('Current Conditions:</b><br />'); $end = strpos($current, '<BR />', $start); Send(trim(str_replace(' F', '__DEG__ F', substr($current, $start, $end - $start)))); },
+	'md5' => function($sender, $arg) { Send(md5($arg)); },
+	'coin' => function($sender, $arg) { $rand = mt_rand(0, 1); if (!empty($arg)) Send('asked their '.$arg.' and got a '.($rand ? 'YES' : 'NO'), $sender); else Send('fliped a coin and got '.($rand ? 'HEADS' : 'TAILS'), $sender); },
+	'troll' => function($sender, $arg) use(&$settings, $me) { if ($arg == 'off' || empty($arg)) { $settings['troll'] = ''; } else if($arg == $me) { Send("HAHA! You can't troll this!"); } else { $settings['troll'] = $sender.'|'.$arg; Send('wishes to troll ' . $arg, $sender); } }
 );
 
 if (strpos($cmd, $cmdChar) === 0) {
@@ -102,15 +118,25 @@ if (strpos($cmd, $cmdChar) === 0) {
 	else if ($cmd == 'help')
 		Send('Commands: \\' . implode(', \\', array_keys($methods)));
 } else {
-	$lols = array('lol', 'haha', 'hehe');
-	if ($sender != $me) {
+	if (strpos($settings['troll'], '|') !== false) {
+		$troll = explode('|', $settings['troll']);
+		if ($sender == $troll[1]) {
+			$quiets = array('shhhh', 'hey '.$troll[1].', the big kids are talking right now', '... so anyway', 'ugh', "hmm? I'm sorry, were you saying something?", "You know what I don't like? People with the username ".$troll[1], 'psh '.$troll[1].' ... what kind of username is that?', 'This is what not caring looks like', strtoupper(trim($message)).'!');
+			
+			shuffle($quiets);
+			
+			Send($quiets[0], $troll[0]);
+		}
+	} else if ($sender != $me) {
+		$lols = array('lol', 'haha', 'hehe');
 		foreach ($lols as $lol) {
 			if (strpos(strtolower($message), $lol) !== false) {
-				echo 'lolololol';
+				Send('lolololol');
 				break;
 			}
 		}
 	}
 }
 
-DONE($file);
+file_put_contents(SETTINGS, json_encode($settings));
+DONE();
