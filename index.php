@@ -40,6 +40,7 @@ if (file_exists(PATH . $file)) {
 }
 
 define('TIME_FORMAT', 'M d Y h:i:s a');
+define('GEO_CODE', '56730653');
 
 $cmd = explode(' ', $message);
 
@@ -50,35 +51,15 @@ $arg = count($cmd) > 1 ? $cmd[1] : '';
 $cmd = $cmd[0];
 
 $methods = array(
-	'roll' => function($sender, $arg) {
-		$rolls = 'rolled ' . mt_rand(1, 6);
-		if (is_numeric($arg) && $arg > 0 && $arg < 6) {
-			for ($i = 0; $i < $arg - 1; $i++)
-				$rolls .= ', ' . mt_rand(1, 6);
-		}
-		
-		Send($rolls, $sender);
-	},
-	'd20' => function($sender, $arg) {
-		$rolls = 'rolled ' . mt_rand(1, 20);
-		if (is_numeric($arg) && $arg > 0 && $arg < 6) {
-			for ($i = 0; $i < $arg - 1; $i++)
-				$rolls .= ', ' . mt_rand(1, 20);
-		}
-		
-		Send($rolls, $sender);
-	},
-	/*'brent' => function()
-	{
-		$lines = explode("\n", trim(file_get_contents(PATH . 'brent.txt')));
-		shuffle($lines);
-		Send($lines[0], '', true);
-	},*/
+	'roll' => function($sender, $arg) { $rolls = 'rolled ' . mt_rand(1, 6); if (is_numeric($arg) && $arg > 0 && $arg <= 6) { for ($i = 0; $i < $arg - 1; $i++) $rolls .= ', ' . mt_rand(1, 6); } else if ($arg < 0) { $rolls = ", guess what happens when you roll negative dice... you get a 0. Congratulations, you lose"; } else if ($arg > 6) { $rolls = ", I only have 6 dice D:"; } Send($rolls, $sender); },
+	'd20' => function($sender, $arg) { $rolls = 'rolled ' . mt_rand(1, 20); if (is_numeric($arg) && $arg > 0 && $arg <= 6) { for ($i = 0; $i < $arg - 1; $i++) $rolls .= ', ' . mt_rand(1, 20); } else if ($arg < 0) { $rolls = ", guess what happens when you roll negative dice... you get a 0. Congratulations, you lose"; } else if ($arg > 6) { $rolls = ", I only have 6 dice D:"; } Send($rolls, $sender); },
+	/*'brent' => function() { $lines = explode("\n", trim(file_get_contents(PATH . 'brent.txt'))); shuffle($lines); Send($lines[0], '', true); },*/
 	'gmt' => function() { Send(gmdate(TIME_FORMAT, time())); },
 	'time' => function() { Send(date(TIME_FORMAT, time())); },
 	'epoch' => function() { Send(time()); },
 	'togmt' => function($sender, $arg) { if (!empty($arg)) Send(gmdate(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\togmt [integer]'); /* 651144633 */ },
-	'totime' => function($sender, $arg) { if (!empty($arg)) Send(date(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\totime [integer]'); /* 651169833 */ }
+	'totime' => function($sender, $arg) { if (!empty($arg)) Send(date(TIME_FORMAT, $arg)); else Send('You must pass an epoch time argument, example: \\totime [integer]'); /* 651169833 */ },
+	'weather' => function() { $xml = simplexml_load_file('http://weather.yahooapis.com/forecastrss?w=' . GEO_CODE); $current = $xml->channel->item->description; $start = strpos($current, 'Current Conditions:') + strlen('Current Conditions:</b><br />'); $end = strpos($current, '<BR />', $start); echo trim(str_replace(' F', '&#176; F', substr($current, $start, $end - $start))); }
 );
 
 if (strpos($cmd, $cmdChar) === 0) {
